@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מבחן: טיפול באינטליגנציה</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .quiz-container {
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .option-btn {
+            transition: all 0.2s ease;
+            border-width: 2px;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn.selected {
+            border-color: #3b82f6; /* blue-500 */
+            background-color: #dbeafe; /* blue-100 */
+        }
+        .option-btn.correct {
+            background-color: #dcfce7; /* green-100 */
+            border-color: #22c55e; /* green-500 */
+        }
+        .option-btn.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+        }
+        #result-container h2 {
+            font-size: 2.5rem;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        /* Style for Arabic questions */
+        .rtl-question {
+            direction: rtl;
+            text-align: right;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-slate-100 text-slate-800">
+
+    <div id="quiz-container" class="quiz-container bg-white rounded-2xl p-6 sm:p-8 w-11/12 max-w-2xl">
+        <div id="quiz-header">
+            <h1 class="text-3xl font-bold text-slate-700 mb-2 text-center">מבחן: טיפול באינטליגנציה</h1>
+            <p class="text-slate-500 mb-6 text-center">קרא את השאלה ובחר את התשובה הנכונה ביותר.</p>
+            <div class="bg-slate-200 h-2 rounded-full mb-6">
+                <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-300"></div>
+            </div>
+        </div>
+
+        <div id="question-area">
+            <h2 id="question-text" class="text-2xl font-semibold mb-6 min-h-[7rem]"></h2>
+            <div id="options-container" class="grid grid-cols-1 gap-4">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <div id="quiz-footer" class="mt-8 flex justify-between items-center">
+            <span id="question-counter" class="text-slate-500 font-medium"></span>
+            <button id="next-btn" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed">הבא</button>
+        </div>
+
+        <div id="result-container" class="hidden text-center">
+            <h2 class="font-bold text-slate-700 mb-4">התוצאה שלך</h2>
+            <p id="score-text" class="text-4xl font-bold text-blue-500 mb-4"></p>
+            <p id="feedback-text" class="text-slate-600 mb-8 text-lg"></p>
+            <button id="restart-btn" class="bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-600 transition-colors duration-300">התחל מחדש</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "מה היה שמו של הנסיך בסיפור?",
+                options: ["ג'אבר", "נור א-דין", "סלאח א-דין", "אל-מג'די"],
+                answer: "נור א-דין",
+                lang: "he"
+            },
+            {
+                question: "מה הייתה הבעיה העיקרית של הנסיך?",
+                options: ["הוא היה רזה מדי", "הוא היה עצלן", "הוא סבל מעודף משקל", "הוא היה בררן באוכל"],
+                answer: "הוא סבל מעודף משקל",
+                lang: "he"
+            },
+            {
+                question: "מה היה משקלו של הנסיך?",
+                options: ["100 קילוגרם", "150 קילוגرם", "200 קילוגרם", "250 קילוגרם"],
+                answer: "200 קילוגרם",
+                lang: "he"
+            },
+            {
+                question: "מה אמר הרופא ג'אבר לנסיך שיקרה לו?",
+                options: ["שהוא צריך להתאמן יותר", "שהוא ימות בעוד חודש ירחי", "שהוא צריך לאכול יותר ירקות", "שיש לו מחלה נדירה"],
+                answer: "שהוא ימות בעוד חודש ירחי",
+                lang: "he"
+            },
+            {
+                question: "כיצד הנסיך איבד ממשקלו?",
+                options: ["הוא התחיל דיאטה חדשה", "הוא התאמן כל יום", "הוא הפסיק לאכול מתוך פחד ודאגה", "הוא עבר ניתוח"],
+                answer: "הוא הפסיק לאכול מתוך פחד ודאגה",
+                lang: "he"
+            },
+            {
+                question: "כמה ממשקלו איבד הנסיך?",
+                options: ["רבע ממשקלו", "את כל משקלו", "חצי ממשקלו", "הוא לא ירד במשקל כלל"],
+                answer: "חצי ממשקלו",
+                lang: "he"
+            },
+            {
+                question: "מה היה ה'טיפול' האמיתי של הרופא?",
+                options: ["שיקוי קסמים", "תוכנית תזונה מיוחדת", "שימוש בתחבולה ובאינטליגנציה", "היפנוזה"],
+                answer: "שימוש בתחבולה ובאינטליגנציה",
+                lang: "he"
+            },
+            {
+                question: "מהו הלקח המרכזי של הסיפור, לפי דברי הרופא?",
+                options: ["'נפש בריאה בגוף בריא'", "'קיבתו של אדם היא בית מחלתו'", "'תפוח ביום ירחיק את הרופא'", "'הצחוק יפה לבריאות'"],
+                answer: "'קיבתו של אדם היא בית מחלתו'",
+                lang: "he"
+            },
+            {
+                question: "מה הייתה תגובת הנסיך כשגילה את האמת?",
+                options: ["הוא כעס ואסר את הרופא", "הוא היה עצוב ומדוכא", "הוא שמח ורקד מרוב אושר", "הוא לא האמין לרופא"],
+                answer: "הוא שמח ורקד מרוב אושר",
+                lang: "he"
+            },
+            {
+                question: "באיזה פרס זכה הרופא ג'אבר?",
+                options: ["שק מלא בזהב", "הוא מונה לרופא הראשי בארמון", "ארמון משלו", "הוא גורש מהממלכה"],
+                answer: "הוא מונה לרופא הראשי בארמון",
+                lang: "he"
+            },
+            {
+                question: "أيّ كلمة من الكلمات التالية هي اسم تفضيل؟",
+                options: ["طبيب", "قصر", "أذكى", "مرض"],
+                answer: "أذكى",
+                lang: "ar"
+            },
+            {
+                question: "ما هو اسم التفضيل من كلمة 'سعيد'؟",
+                options: ["سعادة", "أسعد", "يسعد", "سعود"],
+                answer: "أسعد",
+                lang: "ar"
+            },
+            {
+                question: "أكمل الجملة: كان الأمير ______ رجال القصر وزنًا قبل علاجه.",
+                options: ["أخفّ", "أطول", "أثقل", "أقصر"],
+                answer: "أثقل",
+                lang: "ar"
+            },
+            {
+                question: "عالج الطبيب جابر الأمير بطريقة هي ______ الطرق فعالية.",
+                options: ["أقل", "أصعب", "أكثر", "أبطأ"],
+                answer: "أكثر",
+                lang: "ar"
+            }
+        ];
+
+        // Element references
+        const quizContainer = document.getElementById('quiz-container');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const nextBtn = document.getElementById('next-btn');
+        const questionCounter = document.getElementById('question-counter');
+        const progressBar = document.getElementById('progress-bar');
+        const resultContainer = document.getElementById('result-container');
+        const scoreText = document.getElementById('score-text');
+        const feedbackText = document.getElementById('feedback-text');
+        const restartBtn = document.getElementById('restart-btn');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            nextBtn.innerHTML = "הבא";
+            resultContainer.classList.add('hidden');
+            document.getElementById('quiz-header').classList.remove('hidden');
+            document.getElementById('question-area').classList.remove('hidden');
+            document.getElementById('quiz-footer').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionText.innerText = currentQuestion.question;
+
+            // Adjust direction for Arabic questions
+            if (currentQuestion.lang === 'ar') {
+                questionText.classList.add('rtl-question');
+                optionsContainer.classList.add('rtl-question');
+            } else {
+                questionText.classList.remove('rtl-question');
+                optionsContainer.classList.remove('rtl-question');
+            }
+
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.classList.add('option-btn', 'w-full', 'p-4', 'text-right', 'text-lg', 'bg-white', 'rounded-lg', 'border-slate-300', 'border-2', 'hover:bg-blue-50');
+                if (currentQuestion.lang === 'ar') {
+                    button.classList.add('rtl-question');
+                }
+                button.addEventListener('click', () => selectOption(button, option));
+                optionsContainer.appendChild(button);
+            });
+
+            updateProgress();
+        }
+
+        function resetState() {
+            nextBtn.disabled = true;
+            selectedOption = null;
+            while (optionsContainer.firstChild) {
+                optionsContainer.removeChild(optionsContainer.firstChild);
+            }
+        }
+
+        function selectOption(button, option) {
+            if (selectedOption) return; // Prevent changing answer
+            
+            selectedOption = button;
+
+            // Remove selected class from all buttons and add to the clicked one
+            Array.from(optionsContainer.children).forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            button.classList.add('selected');
+            
+            const correct = option === quizData[currentQuestionIndex].answer;
+            if (correct) {
+                score++;
+            }
+            
+            // Provide visual feedback
+            Array.from(optionsContainer.children).forEach(btn => {
+                 btn.disabled = true;
+                if (btn.innerText === quizData[currentQuestionIndex].answer) {
+                    btn.classList.add('correct');
+                } else if (btn === selectedOption) {
+                     btn.classList.add('incorrect');
+                }
+            });
+
+            nextBtn.disabled = false;
+        }
+
+        function updateProgress() {
+            questionCounter.innerText = `שאלה ${currentQuestionIndex + 1} / ${quizData.length}`;
+            const progressPercentage = ((currentQuestionIndex + 1) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+        }
+        
+        function showResults() {
+            document.getElementById('quiz-header').classList.add('hidden');
+            document.getElementById('question-area').classList.add('hidden');
+            document.getElementById('quiz-footer').classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+            
+            const scorePercent = Math.round((score / quizData.length) * 100);
+            scoreText.innerText = `${scorePercent}%`;
+            
+            let feedback = '';
+            if (scorePercent === 100) {
+                feedback = 'كل الاحترام! معرفة كاملة!'; // Translated to Arabic
+            } else if (scorePercent >= 70) {
+                feedback = 'ممتاز! لقد أظهرت معرفة كبيرة بالقصة.'; // Translated
+            } else if (scorePercent >= 50) {
+                feedback = 'عمل جيد! يمكن التحسن أكثر.'; // Translated
+            } else {
+                feedback = 'يجب قراءة القصة مرة أخرى لفهم أفضل.'; // Translated
+            }
+            feedbackText.innerText = feedback;
+        }
+
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        });
+        
+        restartBtn.addEventListener('click', startQuiz);
+
+        // Initial call
+        startQuiz();
+    </script>
+
+</body>
+</html>
+
