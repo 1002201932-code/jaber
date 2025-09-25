@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>امتحان المفردات — عربي ↔ عبري</title>
+  <style>
+    body{font-family:Tahoma, Arial, sans-serif;background:#f3f4f6;margin:0;padding:24px;direction:rtl;height:100vh;}
+    .wrap{max-width:820px;margin:0 auto}
+    .card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,.08);transition:transform 0.3s ease}
+    h1{margin:0 0 8px;font-size:24px;text-align:center}
+    .word{font-size:28px;font-weight:700;margin:12px 0;text-align:center}
+    .options{display:flex;justify-content:center;gap:12px;margin:12px 0;flex-wrap:wrap}
+    .opt{background:#e2e8f0;padding:6px 12px;border-radius:8px;font-size:18px}
+    input[type=text]{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:16px}
+    .controls{display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap}
+    button{padding:10px 14px;border-radius:8px;border:0;background:#0ea5a4;color:#fff;cursor:pointer}
+    button.secondary{background:#64748b}
+    .feedback{margin-top:14px;font-weight:600;text-align:center}
+    .timer, .exam-timer{margin-top:10px;font-size:18px;text-align:center;font-weight:bold}
+    .timer{color:#b91c1c}
+    .exam-timer{color:#7c2d12}
+    .score{margin-top:10px;font-size:18px;text-align:center;color:#065f46;font-weight:bold}
+    .correct-anim{animation:popCorrect 1s ease; background:#bbf7d0 !important}
+    .wrong-anim{animation:shakeWrong 0.6s ease; background:#fecaca !important}
+    @keyframes popCorrect{
+      0%{transform:scale(1); background:#bbf7d0}
+      30%{transform:scale(1.4); background:#86efac}
+      60%{transform:scale(0.9); background:#bbf7d0}
+      100%{transform:scale(1); background:#fff}
+    }
+    @keyframes shakeWrong{
+      0%,100%{transform:translateX(0)}
+      25%{transform:translateX(-10px)}
+      50%{transform:translateX(10px)}
+      75%{transform:translateX(-6px)}
+    }
+    .score-popup{
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      background:#0ea5a4;color:#fff;padding:20px 30px;border-radius:12px;
+      font-size:24px;font-weight:bold;display:none;z-index:1000;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="cardBox">
+      <h1>امتحان المفردات (عربي ↔ عبري)</h1>
+      <p style="text-align:center">الكلمة بالعربية — اكتب معناها بالعبرية</p>
+
+      <div id="word" class="word">—</div>
+      <div id="options" class="options"></div>
+
+      <input id="answer" type="text" placeholder="כתוב את המשמעות בעברית..." autocomplete="off" />
+
+      <div class="controls">
+        <button id="checkBtn">تحقق</button>
+        <button id="nextBtn" class="secondary">التالي</button>
+        <button id="showBtn" class="secondary">أظهر الإجابة</button>
+        <button id="fsBtn">ملء الشاشة</button>
+      </div>
+
+      <div id="feedback" class="feedback"></div>
+      <div id="timer" class="timer"></div>
+      <div id="examTimer" class="exam-timer"></div>
+      <div id="score" class="score"></div>
+    </div>
+  </div>
+
+  <div id="scorePopup" class="score-popup"></div>
+
+  <audio id="soundCorrect">
+    <source src="https://www.soundjay.com/buttons/sounds/button-4.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="soundWrong">
+    <source src="https://www.soundjay.com/buttons/sounds/button-10.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const DEFAULT_WORDS = [
+      { word: 'علاج', meanings: ['טיפול'] },
+      { word: 'ذكاء', meanings: ['אינטליגנציה'] },
+      { word: 'دماغ', meanings: ['מוח'] },
+      { word: 'تفكير', meanings: ['חשיבה'] },
+      { word: 'عاطفة', meanings: ['רגש'] },
+      { word: 'سلوك', meanings: ['התנהגות'] }
+    ];
+
+    const wordEl = document.getElementById('word');
+    const ansEl = document.getElementById('answer');
+    const feedbackEl = document.getElementById('feedback');
+    const optionsEl = document.getElementById('options');
+    const timerEl = document.getElementById('timer');
+    const examTimerEl = document.getElementById('examTimer');
+    const scoreEl = document.getElementById('score');
+    const cardBox = document.getElementById('cardBox');
+    const scorePopup = document.getElementById('scorePopup');
+
+    const soundCorrect = document.getElementById('soundCorrect');
+    const soundWrong = document.getElementById('soundWrong');
+
+    let idx = 0;
+    let score = 0;
+    let countdown;
+    let timeLimit = 15;
+    let examTime = 60;
+    let examCountdown;
+
+    function render(){
+      if(!DEFAULT_WORDS.length){ wordEl.textContent='لا توجد كلمات'; return; }
+      const w = DEFAULT_WORDS[idx];
+      wordEl.textContent = w.word;
+      ansEl.value = '';
+      feedbackEl.textContent = '';
+      optionsEl.innerHTML = '';
+
+      let all = DEFAULT_WORDS.map(x => x.meanings[0]);
+      let correct = w.meanings[0];
+      let pool = all.filter(m=>m!==correct);
+      shuffle(pool);
+      let shown = [correct, ...pool.slice(0,3)];
+      shuffle(shown);
+      shown.forEach(m=>{
+        const span = document.createElement('div');
+        span.className = 'opt';
+        span.textContent = m;
+        optionsEl.appendChild(span);
+      });
+
+      startWordTimer();
+      updateScore();
+      ansEl.focus();
+    }
+
+    function normalize(s){ return (s||'').trim().toLowerCase(); }
+
+    function check(){
+      const given = normalize(ansEl.value);
+      const w = DEFAULT_WORDS[idx];
+      const meanings = w.meanings.map(m=>normalize(m));
+
+      if(meanings.includes(given)){
+        feedbackEl.textContent = '✅ תשובה נכונה';
+        score += getWordPoints(w.word);
+        updateScore();
+        soundCorrect.currentTime = 0; soundCorrect.play();
+        cardBox.classList.add('correct-anim');
+      } else {
+        feedbackEl.textContent = '❌ שגוי. התשובה: ' + w.meanings.join(' , ');
+        soundWrong.currentTime = 0; soundWrong.play();
+        cardBox.classList.add('wrong-anim');
+      }
+      clearInterval(countdown);
+      showScorePopup();
+      setTimeout(()=>{
+        cardBox.classList.remove('correct-anim','wrong-anim');
+        next();
+      }, 3000);
+    }
+
+    function showScorePopup(){
+      scorePopup.textContent = 'مجموع النقاط: ' + score;
+      scorePopup.style.display = 'block';
+      setTimeout(()=>{ scorePopup.style.display = 'none'; }, 3000);
+    }
+
+    function getWordPoints(word){
+      const len = word.length;
+      if(len <= 3) return 30;
+      if(len <= 5) return 50;
+      return 70;
+    }
+
+    function next(){
+      clearInterval(countdown);
+      idx = (idx+1) % DEFAULT_WORDS.length;
+      render();
+    }
+
+    function show(){
+      const w = DEFAULT_WORDS[idx];
+      feedbackEl.textContent = 'התשובה: ' + w.meanings.join(' , ');
+      clearInterval(countdown);
+      setTimeout(next, 2000);
+    }
+
+    function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+    function startWordTimer(){
+      let time = timeLimit;
+      timerEl.textContent = '⏳ الوقت المتبقي لهذه الكلمة: ' + time + ' ث';
+      countdown = setInterval(()=>{
+        time--;
+        timerEl.textContent = '⏳ الوقت المتبقي لهذه الكلمة: ' + time + ' ث';
+        if(time <= 0){
+          clearInterval(countdown);
+          feedbackEl.textContent = '⏰ انتهى وقت الكلمة! الإجابة: ' + DEFAULT_WORDS[idx].meanings.join(' , ');
+          soundWrong.currentTime = 0; soundWrong.play();
+          cardBox.classList.add('wrong-anim');
+          showScorePopup();
+          setTimeout(()=>{
+            cardBox.classList.remove('wrong-anim');
+            next();
+          },3000);
+        }
+      },1000);
+    }
+
+    function startExamTimer(){
+      examTimerEl.textContent = '⏱️ الوقت الكلي للامتحان: ' + examTime + ' ث';
+      examCountdown = setInterval(()=>{
+        examTime--;
+        examTimerEl.textContent = '⏱️ الوقت الكلي للامتحان: ' + examTime + ' ث';
+        if(examTime <= 0){
+          clearInterval(examCountdown);
+          clearInterval(countdown);
+          feedbackEl.textContent = '🏁 انتهى الامتحان! مجموع نقاطك: ' + score;
+          ansEl.disabled = true;
+          document.getElementById('checkBtn').disabled = true;
+          document.getElementById('nextBtn').disabled = true;
+          document.getElementById('showBtn').disabled = true;
+          document.getElementById('fsBtn').disabled = true;
+        }
+      },1000);
+    }
+
+    function updateScore(){
+      scoreEl.textContent = 'النقاط: ' + score;
+    }
+
+    // زر ملء الشاشة
+    const fsBtn = document.getElementById('fsBtn');
+    fsBtn.addEventListener('click', ()=>{
+      if(!document.fullscreenElement){
+        document.documentElement.requestFullscreen();
+        fsBtn.textContent = 'خروج من ملء الشاشة';
+      } else {
+        if(document.exitFullscreen){
+          document.exitFullscreen();
+          fsBtn.textContent = 'ملء الشاشة';
+        }
+      }
+    });
+
+    document.getElementById('checkBtn').addEventListener('click', check);
+    document.getElementById('nextBtn').addEventListener('click', next);
+    document.getElementById('showBtn').addEventListener('click', show);
+    ansEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ check(); } });
+
+    render();
+    startExamTimer();
+  </script>
+</body>
+</html>
