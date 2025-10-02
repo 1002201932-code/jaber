@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>العود – درس تفاعلي</title>
+  <style>
+    :root{
+      --bg:#f7f9fc;--card:#ffffff;--ink:#0f172a;--muted:#475569;--accent:#16a34a;--danger:#dc2626;--ring:#cbd5e1;
+    }
+    html,body{margin:0;height:100%;font-family:"Tajawal","Cairo","Noto Naskh Arabic",system-ui;-webkit-font-smoothing:antialiased;background:var(--bg);color:var(--ink)}
+    .wrap{max-width:980px;margin:auto;padding:24px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px}
+    header h1{margin:0;font-size:clamp(22px,3.6vw,36px)}
+    header .small{color:var(--muted);font-size:14px}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:18px;box-shadow:0 6px 24px rgba(15,23,42,.06);padding:18px;margin:14px 0}
+    .text{line-height:2.1;font-size:20px}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    button, .btn{cursor:pointer;border:1px solid var(--ring);background:#fff;border-radius:12px;padding:10px 14px;font-size:16px}
+    button:hover{background:#f1f5f9}
+    .accent{border-color:#22c55e}
+    .danger{border-color:#ef4444}
+    .ok{color:#065f46}
+    .no{color:#b91c1c}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+    .q{padding:14px;border-radius:14px;border:1px dashed #d1d5db;background:#fff}
+    .q h3{margin:0 0 8px 0;font-size:18px}
+    .choices{display:grid;gap:8px}
+    .choices label{border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:8px}
+    .choices input{accent-color:#16a34a}
+    .feedback{min-height:22px;font-weight:700}
+    .right{color:var(--accent)}
+    .wrong{color:var(--danger)}
+    .fill input{width:100%;padding:10px;border-radius:10px;border:1px solid #cbd5e1;font-size:16px}
+    .hl{background:#fff8dc;padding:2px 6px;border-radius:8px}
+    .muted{color:var(--muted)}
+    .footer{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}
+    .score{font-size:18px}
+    .badge{background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:4px 10px}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;border:1px solid #cbd5e1;border-bottom-width:3px;border-radius:8px;padding:0 6px}
+    /* accessibility */
+    button:focus, input:focus{outline:3px solid #93c5fd;outline-offset:2px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>العود – درس تفاعلي للابتدائي</h1>
+      <div class="small">اضغط <span class="kbd">Ctrl</span> + <span class="kbd">+</span> للتكبير</div>
+    </header>
+
+    <section class="card">
+      <div class="controls">
+        <button id="ttsBtn" class="accent">🔊 استمع إلى النص</button>
+        <button id="vowelsBtn">إخفاء/إظهار التشكيل</button>
+        <button id="printBtn">🖨️ طباعة الصفحة</button>
+      </div>
+      <article id="text" class="text" aria-label="النص">
+        <h2 style="margin:8px 0 12px 0">النَّصُّ</h2>
+        <p>
+          <span class="hl">اِسْمُهُ العُودُ</span>، وهوَ <strong>سُلطانُ المُوسِيقَى العَرَبِيَّةِ</strong>.
+          ظَهَرَتْ هذِهِ الآلَةُ المُوسِيقِيَّةُ سَنَةَ <strong>١٦٠٠ قَبْلَ المِيلادِ</strong>
+          عِنْدَ البَابِلِيِّينَ، وبَعْدَ مِائَةِ سَنَةٍ في مِصْرَ القَدِيمَةِ أَيْضًا.
+          تَعَرَّفَتْ أُورُوبَّا عَلَى هذِهِ الآلَةِ عِنْدَمَا وَصَلَ العَرَبُ
+          إِلى إِسْبَانْيَا سَنَةَ <strong>٧١٠ لِلمِيلادِ</strong>.
+          كَلِمَةُ «عُود» تَعْنِي <em>الخَشَبَ</em>، ويُقَالُ إِنَّ العُودَ هُوَ طِيبُ النَّفْسِ وَالرُّوحِ.
+        </p>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2 style="margin-top:0">فَهْمُ المَقْرُوء – اختر الإجابة</h2>
+      <div class="grid" id="mcq"></div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin-top:0">أكمل الفراغ</h2>
+      <div class="grid" id="fills"></div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin-top:0">نشاط سريع</h2>
+      <p class="muted">اضغط على الكلمة المطلوبة داخل النص:</p>
+      <div class="controls">
+        <button data-find="الخَشَبَ">ابحث عن: الخشب</button>
+        <button data-find="سُلطانُ">ابحث عن: سلطان</button>
+        <button data-find="٧١٠">ابحث عن: ٧١٠</button>
+      </div>
+      <p id="findMsg" class="feedback"></p>
+    </section>
+
+    <section class="card footer">
+      <div class="score">النتيجة: <span id="score">0</span> / <span id="total">0</span> <span id="badge" class="badge" style="display:none"></span></div>
+      <div class="controls">
+        <button id="checkAll" class="accent">تحقُّق من جميع الإجابات</button>
+        <button id="reset" class="danger">إعادة تعيين</button>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // بيانات الأسئلة
+    const mcqData = [
+      {
+        q: "ما لَقَبُ آلةِ العودِ في النَّص؟",
+        choices: ["أمير الموسيقى العربية","سُلطانُ الموسيقى العربية","ملك الإيقاع"],
+        answer: 1
+      },
+      {
+        q: "متى تَعرَّفت أوروبا على آلة العود؟",
+        choices: ["سنة ٧١٠ للميلاد","سنة ١٦٠٠ قبل الميلاد","سنة ١٠٠ بعد الميلاد"],
+        answer: 0
+      },
+      {
+        q: "كلمةُ «عود» ماذا تعني؟",
+        choices: ["الوتر","الخَشَب","اللحن"],
+        answer: 1
+      },
+      {
+        q: "عند مَن ظَهَرَت الآلةُ أوّلًا بحسب النّص؟",
+        choices: ["اليونانيين","البابليين","المصريين"],
+        answer: 1
+      }
+    ];
+
+    const fillData = [
+      {q:"اسمه ______ وهو سلطان الموسيقى العربية.", a:"العود"},
+      {q:"ظهرت هذه الآلة الموسيقية سنة ______ قبل الميلاد.", a:"١٦٠٠"},
+      {q:"وصل العرب إلى إسبانيا سنة ______ للميلاد.", a:"٧١٠"},
+      {q:"كلمة عود تعني ______.", a:"الخشب"}
+    ];
+
+    const grid = document.getElementById('mcq');
+    const fills = document.getElementById('fills');
+    const totalEl = document.getElementById('total');
+    const scoreEl = document.getElementById('score');
+
+    // بناء أسئلة الاختيار من متعدد
+    mcqData.forEach((item, idx)=>{
+      const box = document.createElement('div');
+      box.className = 'q';
+      box.innerHTML = `<h3>${idx+1}. ${item.q}</h3>
+        <div class="choices">
+          ${item.choices.map((c,i)=>`<label><input type="radio" name="mcq${idx}" value="${i}"> ${c}</label>`).join('')}
+        </div>
+        <div class="feedback" id="fb-m${idx}"></div>`;
+      grid.appendChild(box);
+    });
+
+    // بناء أسئلة الإكمال
+    fillData.forEach((item, idx)=>{
+      const box = document.createElement('div');
+      box.className = 'q fill';
+      box.innerHTML = `<h3>${idx+1}. ${item.q}</h3>
+        <input id="fill${idx}" type="text" placeholder="اكتب الإجابة هنا" aria-label="${item.q}">
+        <div class="feedback" id="fb-f${idx}"></div>`;
+      fills.appendChild(box);
+    });
+
+    // حساب المجموع
+    const totalQs = mcqData.length + fillData.length;
+    totalEl.textContent = totalQs;
+
+    function checkAll(){
+      let score = 0;
+      // تحقق من MCQ
+      mcqData.forEach((item, idx)=>{
+        const sel = document.querySelector(`input[name=mcq${idx}]:checked`);
+        const fb = document.getElementById(`fb-m${idx}`);
+        if(!sel){fb.textContent='اختر إجابة.';fb.className='feedback wrong';return;}
+        const ok = Number(sel.value) === item.answer;
+        fb.textContent = ok ? '✔ أحسنت!' : '✘ حاول مرة أخرى';
+        fb.className = 'feedback ' + (ok?'right':'wrong');
+        if(ok) score++;
+      });
+      // تحقق من الفراغات
+      fillData.forEach((item, idx)=>{
+        const input = document.getElementById(`fill${idx}`);
+        const fb = document.getElementById(`fb-f${idx}`);
+        const user = normalizeArabic(input.value);
+        const correct = normalizeArabic(item.a);
+        const ok = user && (user === correct);
+        fb.textContent = ok ? '✔ صحيح' : '✘ غير صحيح';
+        fb.className = 'feedback ' + (ok?'right':'wrong');
+        input.style.borderColor = ok ? '#16a34a' : '#dc2626';
+        if(ok) score++;
+      });
+      scoreEl.textContent = score;
+      const badge = document.getElementById('badge');
+      badge.style.display='inline-block';
+      if(score === totalQs){badge.textContent='امتياز!';}
+      else if(score >= totalQs-1){badge.textContent='رائع!';}
+      else if(score >= Math.ceil(totalQs*0.6)){badge.textContent='جيّد جدًا';}
+      else {badge.textContent='تابِع التدرّب';}
+    }
+
+    function resetAll(){
+      document.querySelectorAll('input[type=radio]').forEach(r=>{r.checked=false});
+      document.querySelectorAll('.feedback').forEach(f=>{f.textContent='';f.className='feedback'});
+      document.querySelectorAll('.fill input').forEach(i=>{i.value='';i.style.borderColor='#cbd5e1'});
+      scoreEl.textContent = '0';
+      document.getElementById('badge').style.display='none';
+    }
+
+    document.getElementById('checkAll').addEventListener('click', checkAll);
+    document.getElementById('reset').addEventListener('click', resetAll);
+
+    // إبراز كلمات
+    document.querySelectorAll('[data-find]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const word = btn.dataset.find;
+        const area = document.getElementById('text');
+        const msg = document.getElementById('findMsg');
+        const range = document.createRange();
+        const walker = document.createTreeWalker(area, NodeFilter.SHOW_TEXT, null);
+        let foundNode = null, offset=0;
+        while(walker.nextNode()){
+          const t = walker.currentNode.nodeValue;
+          const pos = t.indexOf(word);
+          if(pos!==-1){foundNode = walker.currentNode; offset = pos; break;}
+        }
+        if(foundNode){
+          range.setStart(foundNode, offset);
+          range.setEnd(foundNode, offset + word.length);
+          const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+          msg.textContent = 'تمّ تحديد الكلمة داخل النص';
+          msg.className = 'feedback right';
+        }else{
+          msg.textContent = 'لم أجد الكلمة.
+';
+          msg.className = 'feedback wrong';
+        }
+      });
+    });
+
+    // نطق النص (يعتمد على متصفّح الطالب)
+    const ttsBtn = document.getElementById('ttsBtn');
+    let speaking = false;
+    ttsBtn.addEventListener('click', ()=>{
+      if(!('speechSynthesis' in window)){
+        alert('ميزة القراءة غير مدعومة في هذا المتصفّح.');
+        return;
+      }
+      const synth = window.speechSynthesis;
+      if(speaking){ synth.cancel(); speaking=false; ttsBtn.textContent='🔊 استمع إلى النص'; return; }
+      const utter = new SpeechSynthesisUtterance(document.getElementById('text').innerText.replace('النص',''));
+      utter.lang = 'ar-SA';
+      utter.rate = 0.95;
+      utter.onend = ()=>{speaking=false; ttsBtn.textContent='🔊 استمع إلى النص'};
+      speaking = true; ttsBtn.textContent='⏹️ إيقاف القراءة';
+      synth.speak(utter);
+    });
+
+    // إخفاء/إظهار التشكيل
+    const vowelsBtn = document.getElementById('vowelsBtn');
+    let vowelsHidden = false;
+    vowelsBtn.addEventListener('click', ()=>{
+      const el = document.getElementById('text');
+      if(!vowelsHidden){
+        el.dataset.src = el.innerHTML;
+        el.innerHTML = el.innerHTML.replace(/[\u064B-\u0652]/g,'');
+      }else{
+        el.innerHTML = el.dataset.src;
+      }
+      vowelsHidden = !vowelsHidden;
+    });
+
+    // طباعة
+    document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+
+    // فائدة: توحيد الإدخال العربي
+    function normalizeArabic(s){
+      return (s||'').trim()
+        .replace(/[أإآ]/g,'ا')
+        .replace(/ى/g,'ي')
+        .replace(/ة/g,'ه')
+        .replace(/[\u064B-\u0652]/g,'') // إزالة التشكيل
+        .replace(/\s+/g,' ')
+        .toLowerCase();
+    }
+  </script>
+</body>
+</html>
