@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>مسابقة عربية - صف رابع</title>
+  <style>
+    :root{
+      --bg:#f7fafc;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --accent:#2563eb;
+      --ok:#16a34a;
+      --bad:#dc2626;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Tajawal", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Kufi Arabic", Arial, sans-serif;
+      background:linear-gradient(120deg,#eef2ff,#f8fafc);
+      color:var(--text);
+      min-height:100dvh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .app{
+      width:min(980px,100%);
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      border:1px solid #e5e7eb;
+    }
+    header{
+      padding:18px 20px;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:10px 16px;
+      background:#f8fafc;
+      border-bottom:1px solid #e5e7eb;
+    }
+    .title{
+      font-weight:800;
+      font-size:clamp(18px,3vw,24px);
+      letter-spacing:.2px;
+    }
+    .pill{
+      margin-inline-start:auto;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:700;
+    }
+    .pill > div{
+      background:#fff;
+      border:1px solid #e2e8f0;
+      padding:8px 12px;
+      border-radius:12px;
+      box-shadow:var(--shadow);
+    }
+    .view{ padding:28px; }
+    .card{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      padding:22px;
+      box-shadow:var(--shadow);
+    }
+    .qno{
+      color:var(--muted);
+      font-weight:700;
+      margin-bottom:8px;
+    }
+    .question{
+      font-size:clamp(20px,3.6vw,28px);
+      font-weight:800;
+      line-height:1.4;
+      margin:6px 0 18px;
+    }
+    .options{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:12px;
+    }
+    .btn{
+      font:inherit;
+      background:#fff;
+      border:2px solid #e5e7eb;
+      padding:14px 16px;
+      border-radius:14px;
+      cursor:pointer;
+      text-align:center;
+      font-weight:800;
+      transition:transform .08s ease, box-shadow .2s ease, border-color .2s ease;
+      box-shadow:0 4px 16px rgba(0,0,0,.06);
+      user-select:none;
+    }
+    .btn:hover{ transform:translateY(-1px); }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+    .btn.primary{
+      background:var(--accent);
+      color:#fff;
+      border-color:transparent;
+    }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .grow{ flex:1 1 auto; }
+    .meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .badge{
+      background:#f1f5f9;
+      border:1px solid #e2e8f0;
+      padding:8px 12px;
+      border-radius:999px;
+    }
+    .score{ color:var(--accent); font-weight:900; }
+    .flash{
+      animation:blink 1s ease-in-out 1;
+    }
+    @keyframes blink{
+      0%,100%{ box-shadow:0 0 0 0 rgba(0,0,0,0) }
+      25%,75%{ box-shadow:0 0 0 8px rgba(22,163,74,.15) }
+      50%{ box-shadow:0 0 0 10px rgba(22,163,74,.28) }
+    }
+    .wrong{
+      animation:blink-red 1s ease-in-out 1;
+    }
+    @keyframes blink-red{
+      0%,100%{ box-shadow:0 0 0 0 rgba(0,0,0,0) }
+      25%,75%{ box-shadow:0 0 0 8px rgba(220,38,38,.15) }
+      50%{ box-shadow:0 0 0 10px rgba(220,38,38,.28) }
+    }
+    .progress{
+      height:10px;
+      background:#e2e8f0;
+      border-radius:999px;
+      overflow:hidden;
+      position:relative;
+      margin:14px 0 0;
+    }
+    .bar{
+      position:absolute; inset:0;
+      width:100%;
+      transform-origin:right center;
+      background:linear-gradient(90deg,#22c55e,#eab308,#f97316,#ef4444);
+      transform:scaleX(1);
+    }
+    footer{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px 22px; border-top:1px solid #e5e7eb; background:#fafafa;
+    }
+    .muted{ color:var(--muted) }
+    .big{ font-size:clamp(18px,3vw,22px); font-weight:900 }
+    .hidden{ display:none !important }
+    .hint{ font-weight:700; color:#0f766e }
+    .sep{ height:1px; background:#e5e7eb; margin:16px 0 }
+    .center{ text-align:center }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="title">مسابقة اللغة العربية • الصف الرابع</div>
+      <div class="pill">
+        <div>النقاط: <span class="score" id="score">0</span></div>
+        <div>الرقم القياسي: <span id="best">0</span></div>
+        <div>السؤال: <span id="qIndex">-</span>/<span id="qTotal">-</span></div>
+      </div>
+    </header>
+
+    <div class="view">
+      <div id="screen-intro" class="card">
+        <div class="big">أهلاً! هذه مسابقة سريعة في اللغة العربية للصف الرابع.</div>
+        <p class="muted">تتكوّن من أسئلة اختيار من متعدد. لكل سؤال وقت محدد، وإجابتك الصحيحة تعطيك نقاطًا. حاول كسر الرقم القياسي! 🎯</p>
+        <ul class="muted" style="margin:0 0 14px 0; line-height:1.9">
+          <li>المدة لكل سؤال: <b id="perQ">15</b> ثانية.</li>
+          <li>إجابة صحيحة: +10 نقاط. تخفيض التماطل مع الوقت ⏱️.</li>
+          <li>لا تقلق، تنتقل للسؤال التالي تلقائيًا عند انتهاء الوقت.</li>
+        </ul>
+        <div class="row">
+          <button class="btn primary" id="startBtn">ابدأ الآن</button>
+          <button class="btn" id="howBtn">كيف تعمل؟</button>
+          <div class="grow"></div>
+          <button class="btn" id="resetBestBtn" title="حذف الرقم القياسي">حذف الرقم القياسي</button>
+        </div>
+        <div id="how" class="hidden">
+          <div class="sep"></div>
+          <div class="hint">طريقة اللعب</div>
+          <p class="muted">اضغط على الاختيار الصحيح. عند الإجابة يظهر وميض أخضر (أو أحمر للخطأ) ويصدر صوت. ثم ننتقل للسؤال التالي.</p>
+        </div>
+      </div>
+
+      <div id="screen-quiz" class="card hidden" aria-live="polite">
+        <div class="qno">سؤال <span id="qNum">1</span></div>
+        <div class="question" id="questionText">—</div>
+        <div class="options" id="options"></div>
+        <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+        <footer>
+          <div class="meta">
+            <span class="badge">الوقت: <b id="timeLeft">—</b> ث</span>
+            <span class="badge">إجابات صحيحة: <b id="correctCount">0</b></span>
+            <span class="badge">متبقي: <b id="remain">—</b></span>
+          </div>
+          <div class="muted">تلميح: استخدم الأزرار أو لوحة المفاتيح (١-٤).</div>
+        </footer>
+      </div>
+
+      <div id="screen-end" class="card hidden center">
+        <div class="big">انتهت المسابقة!</div>
+        <p>نتيجتك: <b id="finalScore">0</b> نقطة.</p>
+        <p>الرقم القياسي: <b id="finalBest">0</b></p>
+        <div class="row center" style="justify-content:center">
+          <button class="btn primary" id="againBtn">العب مجددًا</button>
+          <button class="btn" id="shareBtn" title="انسخ النتيجة">نسخ النتيجة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- أصوات -->
+  <audio id="s-correct" preload="auto">
+    <source src="data:audio/wav;base64,UklGRqgAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAZGF0YQCgAAAAAAAAPwAAAP8AAP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A" type="audio/wav">
+  </audio>
+  <audio id="s-wrong" preload="auto">
+    <source src="data:audio/wav;base64,UklGRqgAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAZGF0YQCgAAAAAAAAPwAAAP8AAP8A/wD/AAD/AAAA/wAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA" type="audio/wav">
+  </audio>
+  <audio id="s-tick" preload="auto">
+    <source src="data:audio/wav;base64,UklGRkQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAZGF0YQBAAAAAAAAAPwAAAP8A" type="audio/wav">
+  </audio>
+
+  <script>
+    // ————— بيانات الأسئلة (يمكنك التعديل لاحقًا) —————
+    const QUESTIONS = [
+      {
+        q: "ما جمع كلمة (كتاب)؟",
+        options: ["كتائب", "كتب", "كتابات", "كاتبون"],
+        answer: 1
+      },
+      {
+        q: "أيُّ الجمل صحيحة إملائيًا؟",
+        options: ["ذهبتو إلى المدرسة", "ذهبتُ إلى المدرسه", "ذَهَبتُ إلى المدرسة", "ذهبْتُ إلى المدرسه"],
+        answer: 2
+      },
+      {
+        q: "مرادف كلمة (سعيد) هو:",
+        options: ["حزين", "فرح", "قصير", "سريع"],
+        answer: 1
+      },
+      {
+        q: "مؤنث كلمة (طالب) هو:",
+        options: ["طالبة", "طالبات", "طالبون", "طلب"],
+        answer: 0
+      },
+      {
+        q: "مفرد (أصدقاء) هو:",
+        options: ["صديق", "صدقة", "صَدوق", "صداقة"],
+        answer: 0
+      },
+      {
+        q: "الكلمة التي تحتوي على تاء مربوطة:",
+        options: ["حديقـه", "مدرسة", "بيت", "كتاب"],
+        answer: 1
+      },
+      {
+        q: "الكلمة المضادّة لـ (قوي):",
+        options: ["شجاع", "ضعيف", "سريع", "لطيف"],
+        answer: 1
+      },
+      {
+        q: "نوع التنوين في كلمة (كتابًا):",
+        options: ["تنوين ضم", "تنوين كسر", "تنوين فتح", "بدون تنوين"],
+        answer: 2
+      },
+      {
+        q: "علامة الاستفهام تُكتب:",
+        options: ["،", "؛", "؟", "!"],
+        answer: 2
+      },
+      {
+        q: "ضد كلمة (بعيد):",
+        options: ["طويل", "قريب", "قصير", "عميق"],
+        answer: 1
+      }
+    ];
+
+    // ————— الإعدادات —————
+    const SECONDS_PER_QUESTION = 15;
+    const POINTS_PER_QUESTION = 10;
+
+    // ————— الحالة —————
+    let index = 0;
+    let score = 0;
+    let correct = 0;
+    let timerId = null;
+    let timeLeft = SECONDS_PER_QUESTION;
+    let locked = false;
+
+    // ————— عناصر DOM —————
+    const screenIntro = document.getElementById("screen-intro");
+    const screenQuiz  = document.getElementById("screen-quiz");
+    const screenEnd   = document.getElementById("screen-end");
+    const startBtn = document.getElementById("startBtn");
+    const howBtn = document.getElementById("howBtn");
+    const howBox = document.getElementById("how");
+    const resetBestBtn = document.getElementById("resetBestBtn");
+
+    const questionText = document.getElementById("questionText");
+    const optionsBox = document.getElementById("options");
+    const qNum = document.getElementById("qNum");
+    const qIndex = document.getElementById("qIndex");
+    const qTotal = document.getElementById("qTotal");
+    const timeLeftEl = document.getElementById("timeLeft");
+    const bar = document.getElementById("bar");
+    const scoreEl = document.getElementById("score");
+    const correctCountEl = document.getElementById("correctCount");
+    const remainEl = document.getElementById("remain");
+
+    const finalScore = document.getElementById("finalScore");
+    const finalBest = document.getElementById("finalBest");
+    const againBtn = document.getElementById("againBtn");
+    const shareBtn = document.getElementById("shareBtn");
+
+    const bestEl = document.getElementById("best");
+
+    // ————— أصوات —————
+    const sCorrect = document.getElementById("s-correct");
+    const sWrong = document.getElementById("s-wrong");
+    const sTick = document.getElementById("s-tick");
+
+    // ————— تخزين —————
+    const BEST_KEY = "arabic_quiz_best_v1";
+
+    function getBest(){
+      const v = Number(localStorage.getItem(BEST_KEY) || 0);
+      return isNaN(v) ? 0 : v;
+    }
+    function setBest(v){
+      localStorage.setItem(BEST_KEY, String(v));
+    }
+
+    // ————— أدوات —————
+    function byebyeTimers(){
+      if (timerId) { clearInterval(timerId); timerId = null; }
+    }
+    function setScreen(name){
+      screenIntro.classList.add("hidden");
+      screenQuiz.classList.add("hidden");
+      screenEnd.classList.add("hidden");
+      if(name==="intro") screenIntro.classList.remove("hidden");
+      if(name==="quiz")  screenQuiz.classList.remove("hidden");
+      if(name==="end")   screenEnd.classList.remove("hidden");
+    }
+    function play(el){
+      try{ el.currentTime = 0; el.play(); }catch(e){}
+    }
+    function formatTwo(n){ return n<10 ? "0"+n : ""+n; }
+
+    // ————— تشغيل —————
+    function start(){
+      index = 0;
+      score = 0;
+      correct = 0;
+      scoreEl.textContent = "0";
+      correctCountEl.textContent = "0";
+      bestEl.textContent = getBest();
+      qTotal.textContent = QUESTIONS.length;
+      perQ.textContent = SECONDS_PER_QUESTION;
+      setScreen("quiz");
+      loadQuestion();
+    }
+
+    function loadQuestion(){
+      byebyeTimers();
+      locked = false;
+      const q = QUESTIONS[index];
+      qNum.textContent = index + 1;
+      qIndex.textContent = index + 1;
+      questionText.textContent = q.q;
+      optionsBox.innerHTML = "";
+      q.options.forEach((opt, i)=>{
+        const b = document.createElement("button");
+        b.className = "btn";
+        b.type = "button";
+        b.textContent = opt;
+        b.dataset.i = i;
+        b.addEventListener("click", ()=> choose(i, b));
+        optionsBox.appendChild(b);
+      });
+      timeLeft = SECONDS_PER_QUESTION;
+      updateMeta();
+      runTimer();
+    }
+
+    function updateMeta(){
+      timeLeftEl.textContent = timeLeft;
+      remainEl.textContent = (QUESTIONS.length - index - 1);
+      // تقدم الشريط
+      const ratio = Math.max(0, Math.min(1, timeLeft / SECONDS_PER_QUESTION));
+      bar.style.transform = `scaleX(${ratio})`;
+      bar.style.transformOrigin = "right center";
+    }
+
+    function choose(i, btnEl){
+      if(locked) return;
+      locked = true;
+      byebyeTimers();
+      const q = QUESTIONS[index];
+      const all = [...optionsBox.querySelectorAll("button")];
+      all.forEach(b=> b.disabled = true);
+      if(i === q.answer){
+        // نقاط تتناقص قليلًا حسب الوقت المستهلك
+        const timeRatio = timeLeft / SECONDS_PER_QUESTION;
+        const gained = Math.max(5, Math.round(POINTS_PER_QUESTION * (0.6 + 0.4 * timeRatio)));
+        score += gained;
+        correct += 1;
+        scoreEl.textContent = score;
+        correctCountEl.textContent = correct;
+        btnEl.classList.add("flash");
+        play(sCorrect);
+      }else{
+        btnEl.classList.add("wrong");
+        // تأشير الصحيح
+        const rightBtn = optionsBox.querySelector(`button[data-i="${q.answer}"]`);
+        rightBtn && rightBtn.classList.add("flash");
+        play(sWrong);
+      }
+      // الانتقال للسؤال التالي بعد ومضة
+      setTimeout(next, 900);
+    }
+
+    function next(){
+      index++;
+      if(index >= QUESTIONS.length){
+        endGame();
+      }else{
+        loadQuestion();
+      }
+    }
+
+    function endGame(){
+      setScreen("end");
+      finalScore.textContent = score;
+      const best = getBest();
+      if(score > best){
+        setBest(score);
+        bestEl.textContent = score;
+        finalBest.textContent = score + " (جديد!)";
+      }else{
+        finalBest.textContent = best;
+      }
+    }
+
+    function runTimer(){
+      updateMeta();
+      byebyeTimers();
+      timerId = setInterval(()=>{
+        timeLeft--;
+        // صوت خفيف آخر 5 ثوانٍ
+        if(timeLeft <= 5 && timeLeft > 0){
+          play(sTick);
+        }
+        if(timeLeft <= 0){
+          byebyeTimers();
+          // كأنها إجابة خاطئة بدون اختيار
+          const fake = document.createElement("button");
+          fake.dataset.i = -1;
+          choose(-1, fake);
+          return;
+        }
+        updateMeta();
+      }, 1000);
+    }
+
+    // ————— أحداث عامة —————
+    startBtn.addEventListener("click", start);
+    howBtn.addEventListener("click", ()=> howBox.classList.toggle("hidden"));
+    resetBestBtn.addEventListener("click", ()=>{
+      localStorage.removeItem(BEST_KEY);
+      bestEl.textContent = "0";
+    });
+    againBtn.addEventListener("click", ()=>{
+      setScreen("intro");
+    });
+    shareBtn.addEventListener("click", ()=>{
+      const txt = `نتيجتي في مسابقة العربية: ${score} نقطة من ${QUESTIONS.length * POINTS_PER_QUESTION}. الرقم القياسي الحالي: ${getBest()}.`;
+      if(navigator.clipboard){ navigator.clipboard.writeText(txt); }
+      alert("تم نسخ النتيجة!");
+    });
+
+    // أرقام لوحة المفاتيح 1-4 العربية/اللاتينية
+    window.addEventListener("keydown", (e)=>{
+      const map = { "1":0,"2":1,"3":2,"4":3, "١":0,"٢":1,"٣":2,"٤":3 };
+      if(screenQuiz.classList.contains("hidden")) return;
+      const v = map[e.key];
+      if(v !== undefined){
+        const btn = optionsBox.querySelector(`button[data-i="${v}"]`);
+        if(btn) choose(v, btn);
+      }
+    });
+
+    // تهيئة أولية
+    const perQ = document.getElementById("perQ");
+    bestEl.textContent = getBest();
+    qTotal.textContent = QUESTIONS.length;
+    qIndex.textContent = 0;
+  </script>
+</body>
+</html>
